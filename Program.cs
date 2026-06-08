@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 List<string> tasks = new List<string>();
 // 建立一個可以存放很多 string 的清單，名字叫Tasks
@@ -11,9 +12,10 @@ while (true)
     Console.WriteLine("0. Exit");
     Console.WriteLine("1. Show All Tasks");
     Console.WriteLine("2. Add New Task");
-    Console.WriteLine("3. Mark As Completed");
+    Console.WriteLine("3. Change Status");
     Console.WriteLine("4. Delete Task");
     Console.WriteLine("5. Edit Task");
+    Console.WriteLine("6. Show Statistics");
     Console.Write("Please Select An Option:");
 
     string input = Console.ReadLine() ?? "";
@@ -38,7 +40,7 @@ while (true)
             for (int i = 0; i < tasks.Count; i++)
             // 設定 i = 0，只要 i < tasks.Count 成立，就執行迴圈內容；每執行完一輪，i 就加 1。
             {
-                string status = completed[i] ? "[Completed]" : "Uncompleted";
+                string status = completed[i] ? "Completed" : "Uncompleted";
                 Console.WriteLine($"{i + 1}.[{status}] {tasks[i]}");
             }
         }
@@ -63,30 +65,42 @@ while (true)
 
     else if (input == "3")
     {
-        Console.WriteLine("=== Mark As Completed ===");
+        Console.WriteLine("=== Change Status ===");
+
         if (tasks.Count == 0)
         {
-            Console.WriteLine("No task");
+            Console.WriteLine("No task.");
         }
         else
         {
             for (int i = 0; i < tasks.Count; i++)
             {
-                Console.WriteLine($"{i + 1}.{tasks[i]}({completed[i]})");
+                string status = completed[i] ? "Completed" : "Uncompleted";
+                Console.WriteLine($"{i + 1}.[{status}] {tasks[i]}");
             }
 
-            Console.WriteLine("Enter task number to set completed:");
-            string completedInput = Console.ReadLine() ?? "";
-
-            if (int.TryParse(completedInput, out int taskNumber))
+            Console.WriteLine("Enter task number to change status:");
+            string changeInput = Console.ReadLine() ?? "";
+            if (int.TryParse(changeInput, out int taskNumber))
             {
                 int index = taskNumber - 1;
-
                 if (index >= 0 && index < tasks.Count)
                 {
-                    completed[index] = true;
-                    // 將特定index的值修改為true
-                    Console.WriteLine($"{tasks[index]} is completed!");
+                    // if (completed[index] == true)
+                    // {
+                    //     completed[index] = false;
+                    //     Console.WriteLine($"Set {completed[index]} uncompleted.");
+                    // }
+                    // else
+                    // {
+                    //     completed[index] = true;
+                    //     Console.WriteLine($"Set {completed[index]} completed.");
+                    // }
+                    completed[index] = !completed[index];
+                    // 把目前的bool值反過來
+
+                    string status = completed[index] ? "completed" : "uncompleted";
+                    Console.WriteLine($"{tasks[index]} is now {status}.");
                 }
                 else
                 {
@@ -111,7 +125,7 @@ while (true)
         {
             for (int i = 0; i < tasks.Count; i++)
             {
-                string status = completed[i] ? "[Completed]" : "Uncompleted";
+                string status = completed[i] ? "Completed" : "Uncompleted";
                 Console.WriteLine($"{i + 1}.[{status}] {tasks[i]}");
             }
 
@@ -146,7 +160,7 @@ while (true)
     else if (input == "5")
     {
         Console.WriteLine("=== Edit Task ===");
-        if (tasks.Count < 0)
+        if (tasks.Count == 0)
         {
             Console.WriteLine("No task.");
         }
@@ -154,7 +168,7 @@ while (true)
         {
             for (int i = 0; i < tasks.Count; i++)
             {
-                string status = completed[i] ? "[Completed]" : "Uncompleted";
+                string status = completed[i] ? "Completed" : "Uncompleted";
                 Console.WriteLine($"{i + 1}.[{status}] {tasks[i]}");
             }
 
@@ -170,11 +184,16 @@ while (true)
                     Console.WriteLine("Enter new title:");
                     string newTitle = Console.ReadLine() ?? "";
 
-                    if ()
-
+                    if (string.IsNullOrWhiteSpace(newTitle))
+                    {
+                        Console.WriteLine("New Title can't be empty.");
+                    }
+                    else
+                    {
                         string editTask = tasks[index];
-                    tasks[index] = editInput;
-                    Console.WriteLine($"Edit sussessfully.");
+                        tasks[index] = newTitle;
+                        Console.WriteLine($"Edit sussessfully.");
+                    }
                 }
                 else
                 {
@@ -186,6 +205,26 @@ while (true)
                 Console.WriteLine("Task number doesn't exist or invalid insert.");
             }
         }
+    }
+
+    else if (input == "6")
+    {
+        Console.WriteLine("=== Show Statistics ===");
+
+        int totalCount = tasks.Count;
+        int completedCount = 0;
+        int uncompletedCount;
+        int completionRate;
+
+        for (int i = 0; i < completed.Count; i++)
+        {
+            if (completed[i])
+            {
+                completedCount++;
+            }
+        }
+
+        Console.WriteLine($"Total Tasks:{totalCount} \t Completed: \t Uncompleted: \t Completion Rate: %");
     }
 
     else
