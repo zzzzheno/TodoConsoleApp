@@ -1,9 +1,8 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Text.Json;
 
-List<string> tasks = new List<string>();
-// 建立一個可以存放很多 string 的清單，名字叫Tasks
-List<bool> completed = new List<bool>();
+string filePath = "todos.json";
+List<TodoItem> newTasks = LoadTasks(filePath);
+// 程式啟動時讀取檔案
 
 while (true)
 // 永遠重複執行這行程式，直到遇到break
@@ -16,6 +15,8 @@ while (true)
     Console.WriteLine("4. Delete Task");
     Console.WriteLine("5. Edit Task");
     Console.WriteLine("6. Show Statistics");
+    Console.WriteLine("7. Filter");
+    Console.WriteLine("8. Clear All");
     Console.Write("Please Select An Option:");
 
     string input = Console.ReadLine() ?? "";
@@ -23,7 +24,7 @@ while (true)
 
     if (input == "0")
     {
-        Console.WriteLine("Successfully existed.");
+        Console.WriteLine("Successfully exited.");
         break;
     }
 
@@ -31,17 +32,17 @@ while (true)
     {
         Console.WriteLine("=== Show All Tasks ===");
 
-        if (tasks.Count == 0)
+        if (newTasks.Count == 0)
         {
             Console.WriteLine("No task.");
         }
         else
         {
-            for (int i = 0; i < tasks.Count; i++)
-            // 設定 i = 0，只要 i < tasks.Count 成立，就執行迴圈內容；每執行完一輪，i 就加 1。
+            for (int i = 0; i < newTasks.Count; i++)
+            // 設定 i = 0，只要 i < newTasks.Count 成立，就執行迴圈內容；每執行完一輪，i 就加 1。
             {
-                string status = completed[i] ? "Completed" : "Uncompleted";
-                Console.WriteLine($"{i + 1}.[{status}] {tasks[i]}");
+                string status = newTasks[i].IsCompleted ? "Completed" : "Uncompleted";
+                Console.WriteLine($"{i + 1}.[{status}] {newTasks[i].TaskTitle}");
             }
         }
     }
@@ -57,8 +58,12 @@ while (true)
         }
         else
         {
-            tasks.Add(task);
-            completed.Add(false);
+            newTasks.Add(new TodoItem
+            {
+                TaskTitle = task,
+                IsCompleted = false,
+            });
+            SaveTasks(newTasks, filePath);
             Console.WriteLine("Add task successfully.");
         }
     }
@@ -67,16 +72,16 @@ while (true)
     {
         Console.WriteLine("=== Change Status ===");
 
-        if (tasks.Count == 0)
+        if (newTasks.Count == 0)
         {
             Console.WriteLine("No task.");
         }
         else
         {
-            for (int i = 0; i < tasks.Count; i++)
+            for (int i = 0; i < newTasks.Count; i++)
             {
-                string status = completed[i] ? "Completed" : "Uncompleted";
-                Console.WriteLine($"{i + 1}.[{status}] {tasks[i]}");
+                string status = newTasks[i].IsCompleted ? "Completed" : "Uncompleted";
+                Console.WriteLine($"{i + 1}.[{status}] {newTasks[i].TaskTitle}");
             }
 
             Console.WriteLine("Enter task number to change status:");
@@ -84,23 +89,14 @@ while (true)
             if (int.TryParse(changeInput, out int taskNumber))
             {
                 int index = taskNumber - 1;
-                if (index >= 0 && index < tasks.Count)
+                if (index >= 0 && index < newTasks.Count)
                 {
-                    // if (completed[index] == true)
-                    // {
-                    //     completed[index] = false;
-                    //     Console.WriteLine($"Set {completed[index]} uncompleted.");
-                    // }
-                    // else
-                    // {
-                    //     completed[index] = true;
-                    //     Console.WriteLine($"Set {completed[index]} completed.");
-                    // }
-                    completed[index] = !completed[index];
+                    newTasks[index].IsCompleted = !newTasks[index].IsCompleted;
                     // 把目前的bool值反過來
+                    SaveTasks(newTasks, filePath);
 
-                    string status = completed[index] ? "completed" : "uncompleted";
-                    Console.WriteLine($"{tasks[index]} is now {status}.");
+                    string status = newTasks[index].IsCompleted ? "completed" : "uncompleted";
+                    Console.WriteLine($"{newTasks[index].TaskTitle} is now {status}.");
                 }
                 else
                 {
@@ -117,16 +113,16 @@ while (true)
     else if (input == "4")
     {
         Console.WriteLine("=== Delete Task ===");
-        if (tasks.Count == 0)
+        if (newTasks.Count == 0)
         {
             Console.WriteLine("No task.");
         }
         else
         {
-            for (int i = 0; i < tasks.Count; i++)
+            for (int i = 0; i < newTasks.Count; i++)
             {
-                string status = completed[i] ? "Completed" : "Uncompleted";
-                Console.WriteLine($"{i + 1}.[{status}] {tasks[i]}");
+                string status = newTasks[i].IsCompleted ? "Completed" : "Uncompleted";
+                Console.WriteLine($"{i + 1}.[{status}] {newTasks[i].TaskTitle}");
             }
 
             Console.WriteLine("Enter task number to delete:");
@@ -138,11 +134,11 @@ while (true)
             {
                 int index = taskNumber - 1;
 
-                if (index >= 0 && index < tasks.Count)
+                if (index >= 0 && index < newTasks.Count)
                 {
-                    string removedTask = tasks[index];
-                    tasks.RemoveAt(index);
-                    completed.RemoveAt(index);
+                    string removedTask = newTasks[index].TaskTitle;
+                    newTasks.RemoveAt(index);
+                    SaveTasks(newTasks, filePath);
                     Console.WriteLine($"Remove {removedTask} success!");
                 }
                 else
@@ -160,16 +156,16 @@ while (true)
     else if (input == "5")
     {
         Console.WriteLine("=== Edit Task ===");
-        if (tasks.Count == 0)
+        if (newTasks.Count == 0)
         {
             Console.WriteLine("No task.");
         }
         else
         {
-            for (int i = 0; i < tasks.Count; i++)
+            for (int i = 0; i < newTasks.Count; i++)
             {
-                string status = completed[i] ? "Completed" : "Uncompleted";
-                Console.WriteLine($"{i + 1}.[{status}] {tasks[i]}");
+                string status = newTasks[i].IsCompleted ? "Completed" : "Uncompleted";
+                Console.WriteLine($"{i + 1}.[{status}] {newTasks[i].TaskTitle}");
             }
 
             Console.WriteLine("Enter task number to edit:");
@@ -179,7 +175,7 @@ while (true)
             {
                 int index = taskNumber - 1;
 
-                if (index >= 0 && index < tasks.Count)
+                if (index >= 0 && index < newTasks.Count)
                 {
                     Console.WriteLine("Enter new title:");
                     string newTitle = Console.ReadLine() ?? "";
@@ -190,9 +186,9 @@ while (true)
                     }
                     else
                     {
-                        string editTask = tasks[index];
-                        tasks[index] = newTitle;
-                        Console.WriteLine($"Edit sussessfully.");
+                        newTasks[index].TaskTitle = newTitle;
+                        SaveTasks(newTasks, filePath);
+                        Console.WriteLine($"Edit successfully.");
                     }
                 }
                 else
@@ -211,20 +207,163 @@ while (true)
     {
         Console.WriteLine("=== Show Statistics ===");
 
-        int totalCount = tasks.Count;
+        int totalCount = newTasks.Count;
         int completedCount = 0;
-        int uncompletedCount;
-        int completionRate;
+        int uncompletedCount = 0;
 
-        for (int i = 0; i < completed.Count; i++)
+        for (int i = 0; i < newTasks.Count; i++)
         {
-            if (completed[i])
+            if (newTasks[i].IsCompleted)
             {
                 completedCount++;
             }
+            else
+            {
+                uncompletedCount++;
+            }
         }
 
-        Console.WriteLine($"Total Tasks:{totalCount} \t Completed: \t Uncompleted: \t Completion Rate: %");
+        if (totalCount == 0)
+        {
+            Console.WriteLine("No task.");
+        }
+        else
+        {
+            double completionRate = (double)completedCount / totalCount * 100;
+            Console.WriteLine($"Total Tasks: {totalCount}\nCompleted: {completedCount}\nUncompleted: {uncompletedCount}\nCompletion Rate: {completionRate:F2}%");
+        }
+    }
+
+    else if (input == "7")
+    {
+        Console.WriteLine("=== Filter ===\nEnter filter type:\n0 = All\n1 = Completed\n2 = Uncompleted\n3 = Keyword\nSelect the option:");
+        string filterInput = Console.ReadLine() ?? "";
+        if (string.IsNullOrWhiteSpace(filterInput))
+        {
+            Console.WriteLine("Invalid option.");
+        }
+        else
+        {
+            if (filterInput == "0")
+            {
+                if (newTasks.Count == 0)
+                {
+                    Console.WriteLine("No task.");
+                }
+                else
+                {
+                    for (int i = 0; i < newTasks.Count; i++)
+                    {
+                        string status = newTasks[i].IsCompleted ? "Completed" : "Uncompleted";
+                        Console.WriteLine($"{i + 1}.[{status}] {newTasks[i].TaskTitle}");
+                    }
+
+                }
+            }
+            else if (filterInput == "1")
+            {
+                bool hasResult = false;
+                for (int i = 0; i < newTasks.Count; i++)
+                {
+
+                    if (newTasks[i].IsCompleted)
+                    {
+                        Console.WriteLine($"{i + 1}.{newTasks[i].TaskTitle}");
+                        hasResult = true;
+                    }
+                }
+
+                if (!hasResult)
+                {
+                    Console.WriteLine("No completed task.");
+                }
+            }
+            else if (filterInput == "2")
+            {
+                bool hasResult = false;
+                for (int i = 0; i < newTasks.Count; i++)
+                {
+                    if (!newTasks[i].IsCompleted)
+                    {
+                        Console.WriteLine($"{i + 1}.{newTasks[i].TaskTitle}");
+                        hasResult = true;
+                    }
+                }
+
+                if (!hasResult)
+                {
+                    Console.WriteLine("No uncompleted task.");
+                }
+            }
+            else if (filterInput == "3")
+            {
+                Console.WriteLine("Enter keywords to find the task:");
+                string keywordInput = Console.ReadLine() ?? "";
+
+                if (string.IsNullOrWhiteSpace(keywordInput))
+                {
+                    Console.WriteLine("Keyword can't be empty.");
+                }
+                else
+                {
+                    bool hasResult = false;
+                    string keyword = keywordInput.ToLower();
+
+                    for (int i = 0; i < newTasks.Count; i++)
+                    {
+                        string taskTitle = newTasks[i].TaskTitle.ToLower();
+
+                        if (taskTitle.Contains(keyword))
+                        {
+                            string status = newTasks[i].IsCompleted ? "Completed" : "Uncompleted";
+                            Console.WriteLine($"{i + 1}.[{status}] {newTasks[i].TaskTitle}");
+                            hasResult = true;
+                        }
+                    }
+
+                    if (!hasResult)
+                    {
+                        Console.WriteLine("No matching task.");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid option.");
+            }
+        }
+    }
+
+    else if (input == "8")
+    {
+        Console.WriteLine("=== Clear All Tasks ===\nEnter y to clear all tasks:");
+        string clearInput = Console.ReadLine() ?? "";
+        if (string.IsNullOrWhiteSpace(clearInput))
+        {
+            Console.WriteLine("Invalid input.");
+        }
+        else
+        {
+            clearInput = clearInput.ToLower();
+            if (clearInput == "y")
+            {
+                if (newTasks.Count == 0)
+                {
+                    Console.WriteLine("No task can clear.");
+                }
+                else
+                {
+
+                    newTasks.Clear();
+                    SaveTasks(newTasks, filePath);
+                    Console.WriteLine("Clear all tasks successfully!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Clear cancelled");
+            }
+        }
     }
 
     else
@@ -236,4 +375,38 @@ while (true)
     Console.WriteLine("Press Enter to continue...");
     Console.ReadLine();
     Console.Clear();
+}
+
+static void SaveTasks(List<TodoItem> tasks, string filePath)
+{
+    string json = JsonSerializer.Serialize(tasks);
+    File.WriteAllText(filePath, json);
+}
+// 把 List<TodoItem> 轉成 JSON 字串
+// 然後寫入 todos.json
+
+static List<TodoItem> LoadTasks(string filePath)
+{
+    if (!File.Exists(filePath))
+    {
+        return new List<TodoItem>();
+    }
+    // 如果todos.json不存 => 回傳空清單
+
+    string json = File.ReadAllText(filePath);
+
+    if (string.IsNullOrWhiteSpace(json))
+    {
+        return new List<TodoItem>();
+    }
+    // 如果檔案是空的 => 回傳空清單
+
+    return JsonSerializer.Deserialize<List<TodoItem>>(json) ?? new List<TodoItem>();
+    // 如果有內容 => 把 JSON 轉回 List<TodoItem>
+}
+
+class TodoItem
+{
+    public string TaskTitle { get; set; } = "";
+    public bool IsCompleted { get; set; }
 }
