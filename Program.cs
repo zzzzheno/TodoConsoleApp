@@ -300,12 +300,13 @@ static void ClearAllTasks(List<TodoItem> tasks, string filePath)
 
 static void FilterTasks(List<TodoItem> tasks)
 {
+    Console.WriteLine("=== Filter The Task ===");
     if (NoTask(tasks))
     {
         return;
     }
-    Console.WriteLine("=== Filter ===\nEnter filter type:\n0 = All\n1 = Completed\n2 = Uncompleted\n3 = Keyword\nSelect the option:");
 
+    Console.WriteLine("Enter filter type:\n0 = All\n1 = Completed\n2 = Uncompleted\n3 = Keyword\nSelect the option:");
     string filterInput = Console.ReadLine() ?? "";
     if (string.IsNullOrWhiteSpace(filterInput))
     {
@@ -320,40 +321,12 @@ static void FilterTasks(List<TodoItem> tasks)
                 break;
 
             case "1":
-                {
-                    bool hasResult = false;
-                    for (int i = 0; i < tasks.Count; i++)
-                    {
-                        if (tasks[i].IsCompleted)
-                        {
-                            Console.WriteLine($"{i + 1}.{tasks[i].TaskTitle}");
-                            hasResult = true;
-                        }
-                    }
-                    if (!hasResult)
-                    {
-                        Console.WriteLine("No completed task.");
-                    }
-                    break;
-                }
+                PrintTasksByStatus(true, "No completed task.");
+                break;
 
             case "2":
-                {
-                    bool hasResult = false;
-                    for (int i = 0; i < tasks.Count; i++)
-                    {
-                        if (!tasks[i].IsCompleted)
-                        {
-                            Console.WriteLine($"{i + 1}.{tasks[i].TaskTitle}");
-                            hasResult = true;
-                        }
-                    }
-                    if (!hasResult)
-                    {
-                        Console.WriteLine("No uncompleted task.");
-                    }
-                    break;
-                }
+                PrintTasksByStatus(false, "No uncompleted task.");
+                break;
 
             case "3":
                 {
@@ -393,13 +366,31 @@ static void FilterTasks(List<TodoItem> tasks)
                 break;
         }
     }
+
+    void PrintTasksByStatus(bool targetStatus, string noResultMessage)
+    // 方法寫在 FilterTasks 裡面，不用再傳 List<TodoItem> tasks，因為 local function 可以直接使用外層 FilterTasks 的 tasks
+    {
+        bool hasResult = false;
+        for (int i = 0; i < tasks.Count; i++)
+        {
+            if (tasks[i].IsCompleted == targetStatus)
+            {
+                Console.WriteLine($"{i + 1}.{tasks[i].TaskTitle}");
+                hasResult = true;
+            }
+        }
+        if (!hasResult)
+        {
+            Console.WriteLine(noResultMessage);
+        }
+    }
 }
 
 static bool NoTask(List<TodoItem> tasks)
 {
     if (tasks.Count == 0)
     {
-        Console.WriteLine("No task heres.");
+        Console.WriteLine("No task here.");
         return true;
     }
 
