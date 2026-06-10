@@ -19,7 +19,7 @@ while (true)
     Console.WriteLine("8. Clear All");
     Console.Write("Please Select An Option:");
 
-    string input = Console.ReadLine() ?? "";
+    string input = UserInput();
     switch (input)
     {
         case "0":
@@ -27,9 +27,13 @@ while (true)
             return;
         case "1":
             Console.WriteLine("=== Show All Tasks ===");
-            if (!NoTask(tasks))
+            if (!HasNoTasks(tasks))
             {
                 PrintAllTasks(tasks);
+            }
+            else
+            {
+                Console.WriteLine("No task here.");
             }
             break;
 
@@ -109,8 +113,7 @@ static void PrintAllTasks(List<TodoItem> tasks)
     for (int i = 0; i < tasks.Count; i++)
     // 設定 i = 0，只要 i < Tasks.Count 成立，就執行迴圈內容；每執行完一輪，i 就加 1。
     {
-        string status = tasks[i].IsCompleted ? "Completed" : "Uncompleted";
-        Console.WriteLine($"{i + 1}.[{status}] {tasks[i].TaskTitle}");
+        PrintTask(tasks[i], i);
     }
 }
 
@@ -135,7 +138,7 @@ static void AddNewTask(List<TodoItem> tasks, string filePath)
 {
     Console.WriteLine("=== Add New Task ===");
     Console.WriteLine("Enter task:");
-    string task = Console.ReadLine() ?? "";
+    string task = UserInput();
     if (string.IsNullOrWhiteSpace(task))
     {
         Console.WriteLine("Task cannot be empty.");
@@ -155,16 +158,16 @@ static void AddNewTask(List<TodoItem> tasks, string filePath)
 static void ChangeTaskStatus(List<TodoItem> tasks, string filePath)
 {
     Console.WriteLine("=== Change Status ===");
-
-    if (NoTask(tasks))
+    if (HasNoTasks(tasks))
     {
+        Console.WriteLine("No task here.");
         return;
         // 離開目前的方法；若在主程式最外層會結束程式
     }
     PrintAllTasks(tasks);
 
     Console.WriteLine("Enter task number to change status:");
-    string taskNum = Console.ReadLine() ?? "";
+    string taskNum = UserInput();
     if (TryGetTaskIndex(tasks, taskNum, out int index))
     {
         tasks[index].IsCompleted = !tasks[index].IsCompleted;
@@ -178,21 +181,20 @@ static void ChangeTaskStatus(List<TodoItem> tasks, string filePath)
     {
         Console.WriteLine("Task number doesn't exist or invalid insert.");
     }
-
 }
-
 
 static void DeleteTask(List<TodoItem> tasks, string filePath)
 {
     Console.WriteLine("=== Delete Task ===");
-    if (NoTask(tasks))
+    if (HasNoTasks(tasks))
     {
+        Console.WriteLine("No task here.");
         return;
     }
     PrintAllTasks(tasks);
 
     Console.WriteLine("Enter task number to delete:");
-    string taskNum = Console.ReadLine() ?? "";
+    string taskNum = UserInput();
     if (TryGetTaskIndex(tasks, taskNum, out int index))
     {
         string removedTask = tasks[index].TaskTitle;
@@ -209,18 +211,19 @@ static void DeleteTask(List<TodoItem> tasks, string filePath)
 static void EditTask(List<TodoItem> tasks, string filePath)
 {
     Console.WriteLine("=== Edit Task ===");
-    if (NoTask(tasks))
+    if (HasNoTasks(tasks))
     {
+        Console.WriteLine("No task here.");
         return;
     }
     PrintAllTasks(tasks);
 
     Console.WriteLine("Enter task number to edit:");
-    string taskNum = Console.ReadLine() ?? "";
+    string taskNum = UserInput();
     if (TryGetTaskIndex(tasks, taskNum, out int index))
     {
         Console.WriteLine("Enter new title:");
-        string newTitle = Console.ReadLine() ?? "";
+        string newTitle = UserInput();
 
         if (string.IsNullOrWhiteSpace(newTitle))
         {
@@ -273,7 +276,7 @@ static void ShowStatistics(List<TodoItem> tasks)
 static void ClearAllTasks(List<TodoItem> tasks, string filePath)
 {
     Console.WriteLine("=== Clear All Tasks ===\nEnter y to clear all tasks:");
-    string clearInput = Console.ReadLine() ?? "";
+    string clearInput = UserInput();
     if (string.IsNullOrWhiteSpace(clearInput))
     {
         Console.WriteLine("Invalid input.");
@@ -283,8 +286,9 @@ static void ClearAllTasks(List<TodoItem> tasks, string filePath)
         clearInput = clearInput.ToLower();
         if (clearInput == "y")
         {
-            if (NoTask(tasks))
+            if (HasNoTasks(tasks))
             {
+                Console.WriteLine("No task here.");
                 return;
             }
             tasks.Clear();
@@ -301,13 +305,14 @@ static void ClearAllTasks(List<TodoItem> tasks, string filePath)
 static void FilterTasks(List<TodoItem> tasks)
 {
     Console.WriteLine("=== Filter The Task ===");
-    if (NoTask(tasks))
+    if (HasNoTasks(tasks))
     {
+        Console.WriteLine("No task here.");
         return;
     }
 
     Console.WriteLine("Enter filter type:\n0 = All\n1 = Completed\n2 = Uncompleted\n3 = Keyword\nSelect the option:");
-    string filterInput = Console.ReadLine() ?? "";
+    string filterInput = UserInput();
     if (string.IsNullOrWhiteSpace(filterInput))
     {
         Console.WriteLine("Invalid option.");
@@ -321,45 +326,16 @@ static void FilterTasks(List<TodoItem> tasks)
                 break;
 
             case "1":
-                PrintTasksByStatus(true, "No completed task.");
+                PrintTaskByStatus(true, "No completed task.");
                 break;
 
             case "2":
-                PrintTasksByStatus(false, "No uncompleted task.");
+                PrintTaskByStatus(false, "No uncompleted task.");
                 break;
 
             case "3":
-                {
-                    Console.WriteLine("Enter keywords to find the task:");
-                    string keywordInput = Console.ReadLine() ?? "";
-
-                    if (string.IsNullOrWhiteSpace(keywordInput))
-                    {
-                        Console.WriteLine("Keyword can't be empty.");
-                    }
-                    else
-                    {
-                        bool hasResult = false;
-                        string keyword = keywordInput.ToLower();
-
-                        for (int i = 0; i < tasks.Count; i++)
-                        {
-                            string taskTitle = tasks[i].TaskTitle.ToLower();
-
-                            if (taskTitle.Contains(keyword))
-                            {
-                                string status = tasks[i].IsCompleted ? "Completed" : "Uncompleted";
-                                Console.WriteLine($"{i + 1}.[{status}] {tasks[i].TaskTitle}");
-                                hasResult = true;
-                            }
-                        }
-                        if (!hasResult)
-                        {
-                            Console.WriteLine("No matching task.");
-                        }
-                    }
-                    break;
-                }
+                PrintTasksByKeywords();
+                break;
 
             default:
                 Console.WriteLine("Invalid option.");
@@ -367,7 +343,7 @@ static void FilterTasks(List<TodoItem> tasks)
         }
     }
 
-    void PrintTasksByStatus(bool targetStatus, string noResultMessage)
+    void PrintTaskByStatus(bool targetStatus, string noResultMessage)
     // 方法寫在 FilterTasks 裡面，不用再傳 List<TodoItem> tasks，因為 local function 可以直接使用外層 FilterTasks 的 tasks
     {
         bool hasResult = false;
@@ -375,7 +351,7 @@ static void FilterTasks(List<TodoItem> tasks)
         {
             if (tasks[i].IsCompleted == targetStatus)
             {
-                Console.WriteLine($"{i + 1}.{tasks[i].TaskTitle}");
+                PrintTask(tasks[i], i);
                 hasResult = true;
             }
         }
@@ -384,17 +360,62 @@ static void FilterTasks(List<TodoItem> tasks)
             Console.WriteLine(noResultMessage);
         }
     }
+
+    void PrintTasksByKeywords()
+    {
+        Console.WriteLine("Enter keywords to find the task:");
+        string keywordInput = UserInput();
+
+        if (string.IsNullOrWhiteSpace(keywordInput))
+        {
+            Console.WriteLine("Keyword can't be empty.");
+        }
+        else
+        {
+            bool hasResult = false;
+            string keyword = keywordInput.ToLower();
+
+            for (int i = 0; i < tasks.Count; i++)
+            {
+                string taskTitle = tasks[i].TaskTitle.ToLower();
+
+                if (taskTitle.Contains(keyword))
+                {
+                    PrintTask(tasks[i], i);
+                    hasResult = true;
+                }
+            }
+            if (!hasResult)
+            {
+                Console.WriteLine("No matching task.");
+            }
+        }
+
+    }
 }
 
-static bool NoTask(List<TodoItem> tasks)
+static bool HasNoTasks(List<TodoItem> tasks)
 {
-    if (tasks.Count == 0)
-    {
-        Console.WriteLine("No task here.");
-        return true;
-    }
+    // if (tasks.Count == 0)
+    // {
+    //     return true;
+    // }
 
-    return false;
+    // return false;
+
+    return tasks.Count == 0;
+}
+
+static void PrintTask(TodoItem task, int index)
+{
+
+    string status = task.IsCompleted ? "Completed" : "Uncompleted";
+    Console.WriteLine($"{index + 1}.[{status}] {task.TaskTitle}");
+}
+
+static string UserInput()
+{
+    return Console.ReadLine() ?? "";
 }
 
 class TodoItem
